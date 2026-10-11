@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Parc Copieurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#edf1f7;--card:#ffffff;--ink:#0f172a;--muted:#64748b;--line:#e3e9f2;--head:#151a33;--form:#f6f8fc;
+--pri:#4f46e5;--pri-d:#4338ca;--pri-soft:rgba(79,70,229,.1);
+--ok:#15803d;--ok-soft:#dcfce7;--warn:#b45309;--warn-soft:#fef3c7;--bad:#dc2626;--bad-soft:#fee2e2;--info:#1d4ed8;--info-soft:#dbeafe;
+--radius:16px;--radius-s:10px;
+--sh1:0 1px 2px rgba(15,23,42,.06),0 4px 14px rgba(15,23,42,.06);
+--sh2:0 10px 30px rgba(79,70,229,.16);
+--font:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+[data-theme="dark"]{
+--bg:#0a0f1e;--card:#131c33;--ink:#e6ebf5;--muted:#93a1bb;--line:#263354;--head:#070b18;--form:#0e1628;
+--pri:#818cf8;--pri-d:#6366f1;--pri-soft:rgba(129,140,248,.14);
+--ok:#4ade80;--ok-soft:rgba(22,163,74,.2);--warn:#fbbf24;--warn-soft:rgba(217,119,6,.2);--bad:#f87171;--bad-soft:rgba(220,38,38,.22);--info:#60a5fa;--info-soft:rgba(96,165,250,.2);
+--sh1:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+--sh2:0 12px 34px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);background:var(--bg);background-image:radial-gradient(1100px 380px at 50% -140px,rgba(79,70,229,.14),transparent);background-attachment:fixed;color:var(--ink);transition:background .35s,color .35s;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:var(--pri);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#c2cde2;border-radius:8px;border:2px solid var(--bg)}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#334155;border-color:var(--bg)}
+header{background:linear-gradient(135deg,#1e1b4b,#312e81 60%,#4338ca);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;position:sticky;top:0;z-index:40;box-shadow:0 4px 22px rgba(30,27,75,.4);border-bottom:1px solid rgba(255,255,255,.14)}
+header h1{margin:0;font-size:1.35rem;font-weight:800;letter-spacing:-.01em;animation:slideDown .5s ease}
+header p{margin:.25rem 0 0;color:#c7d2fe;font-size:.86rem}
+main{max-width:1200px;margin:auto;padding:1.5rem;animation:fadeIn .5s ease}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1rem .9rem;box-shadow:var(--sh1);transition:transform .2s,box-shadow .25s,border-color .25s,background .35s}
+.stat::after{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--pri),#a78bfa)}
+.stat:hover{transform:translateY(-3px);box-shadow:var(--sh2);border-color:var(--pri)}
+.stat b{font-size:1.7rem;display:block;font-weight:800;letter-spacing:-.02em}
+.stat span{color:var(--muted);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.25rem 1.25rem 1.35rem;margin-bottom:1.5rem;box-shadow:var(--sh1);transition:background .35s,box-shadow .25s,border-color .25s;animation:fadeUp .45s ease}
+section.card:hover{border-color:rgba(79,70,229,.45);box-shadow:var(--sh2)}
+main>section.card:nth-of-type(2){animation-delay:.05s}main>section.card:nth-of-type(3){animation-delay:.1s}main>section.card:nth-of-type(4){animation-delay:.15s}
+section.card h2{margin:.1rem 0 1rem;font-size:1.1rem;font-weight:750;letter-spacing:-.01em;display:flex;align-items:center;gap:.6rem}
+section.card h2::before{content:"";flex:none;width:5px;height:1.3em;border-radius:4px;background:linear-gradient(180deg,var(--pri),#a78bfa)}
+.toolbar{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:.9rem;align-items:center}
+input,select,button,textarea{padding:.55rem .8rem;border:1px solid var(--line);border-radius:var(--radius-s);font-size:.9rem;font-family:inherit;background:var(--card);color:var(--ink);transition:border-color .2s,box-shadow .2s,transform .15s,background .25s;min-height:40px}
+input:hover,select:hover,textarea:hover{border-color:var(--pri)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}
+input::placeholder{color:var(--muted);opacity:.8}
+button{cursor:pointer;background:linear-gradient(180deg,var(--pri),var(--pri-d));color:#fff;border:1px solid var(--pri-d);font-weight:650;box-shadow:0 2px 10px rgba(79,70,229,.32)}
+button:hover{filter:brightness(1.07);transform:translateY(-2px);box-shadow:0 8px 18px rgba(79,70,229,.4)}
+button:active{transform:translateY(0) scale(.98)}
+button:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+button.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none;font-weight:600}
+button.ghost:hover{background:var(--pri-soft);border-color:var(--pri);color:var(--pri-d);box-shadow:0 4px 12px rgba(79,70,229,.18)}
+[data-theme="dark"] button.ghost:hover{color:var(--pri)}
+:root{color-scheme:light}
+[data-theme="dark"]{color-scheme:dark}
+[data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background-color:#1a2540;color:#f3f4f6;border-color:#33456b}
+[data-theme="dark"] input::placeholder,[data-theme="dark"] textarea::placeholder{color:#8ea0c2;opacity:1}
+.brand{display:flex;align-items:center;gap:1rem}
+.logo{font-size:1.75rem;font-weight:900;font-style:italic;color:#ff0000;letter-spacing:.02em;line-height:1;white-space:nowrap;text-shadow:0 2px 14px rgba(255,0,0,.4)}
+.logo-by{font-size:.85rem;font-weight:800;letter-spacing:.14em;vertical-align:middle}
+.head-right{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+#helloUser{font-size:1.5rem;font-weight:800;white-space:nowrap;letter-spacing:-.01em;color:#ffffff;text-shadow:0 2px 10px rgba(0,0,0,.55);animation:helloFloat 3s ease-in-out infinite}
+@keyframes helloShine{to{background-position:200% center}}
+@keyframes helloFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media(max-width:700px){#helloUser{font-size:1.2rem}}
+@media(max-width:700px){.brand{align-items:flex-start}.logo{font-size:1.4rem}}
+#themeBtn{border-color:rgba(255,255,255,.35)!important;background:rgba(255,255,255,.14)!important;color:#fff!important}
+#themeBtn:hover{background:rgba(255,255,255,.28)!important;color:#fff!important;border-color:#fff!important}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:.9rem;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+thead th{background:var(--form);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;transition:background .2s,color .2s}
+th,td{padding:.65rem .7rem;border-bottom:1px solid var(--line);text-align:left}
+th{cursor:pointer;white-space:nowrap}
+th:hover{background:var(--pri);color:#fff}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .2s}
+tbody tr:nth-child(even){background:rgba(100,116,139,.06)}
+[data-theme="dark"] tbody tr:nth-child(even){background:rgba(148,163,184,.06)}
+tbody tr:hover{background:var(--pri-soft);box-shadow:inset 3px 0 0 var(--pri)}
+td b{font-weight:700}
+.badge{padding:.22rem .65rem;border-radius:999px;font-size:.76rem;font-weight:700;display:inline-block;border:1px solid transparent;animation:pop .3s ease;transition:transform .2s,box-shadow .2s;cursor:default;white-space:nowrap}
+.badge:hover{transform:scale(1.08);box-shadow:0 4px 12px rgba(0,0,0,.22)}
+.Excellent{background:var(--ok-soft);color:var(--ok)}.Correct{background:var(--info-soft);color:var(--info)}.Dégradé{background:var(--warn-soft);color:var(--warn)}.HS{background:var(--bad-soft);color:var(--bad)}
+.Neuf{background:var(--ok-soft);color:var(--ok)}.Occasion{background:var(--info-soft);color:var(--info)}.Usé{background:var(--warn-soft);color:var(--warn)}.Rebut{background:var(--bad-soft);color:var(--bad)}
+form.add{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-top:1rem;background:var(--form);border:1px dashed var(--line);padding:.9rem;border-radius:12px;transition:background .35s,border-color .25s}
+form.add:focus-within{border-color:var(--pri);border-style:solid}
+form.add button{grid-column:1/-1;justify-self:start;padding-left:1.4rem;padding-right:1.4rem}
+@media(max-width:700px){form.add button{justify-self:stretch}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{transform:scale(.85)}to{transform:scale(1)}}
+@keyframes zoomIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:700px){
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
+header{flex-direction:column;align-items:stretch;text-align:left;padding:1rem;position:static}
+header h1{font-size:1.15rem}
+main{padding:.8rem}
+.stats{grid-template-columns:repeat(2,1fr);gap:.7rem}
+.stat{padding:.8rem}
+.stat b{font-size:1.35rem}
+section.card{padding:.9rem}
+section.card:hover{transform:none}
+.toolbar{flex-direction:column;align-items:stretch}
+.toolbar input,.toolbar select,.toolbar button{width:100%;min-height:46px;font-size:1rem}
+form.add{grid-template-columns:1fr}
+form.add input,form.add select,form.add button{min-height:46px;font-size:1rem}
+th,td{padding:.6rem .55rem;font-size:.85rem}
+.modal-back{padding:0;align-items:flex-end}
+.modal{max-width:100%;width:100%;min-height:72vh;max-height:94vh;border-radius:20px 20px 0 0;padding:1.1rem;animation:sheetUp .32s ease}
+.detail-grid{grid-template-columns:1fr 1fr}
+.files{grid-template-columns:repeat(2,1fr)}
+.lightbox .bar{flex-wrap:wrap;justify-content:center}
+.lightbox img{max-width:96vw;max-height:68vh}
+}
+@keyframes sheetUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
+@media(hover:none){
+section.card:hover,.stat:hover,button:hover,.badge:hover{transform:none}
+tbody tr:hover{box-shadow:inset 3px 0 0 var(--pri)}
+tbody tr:active,button:active{transform:scale(.98)}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+tr.clickable{cursor:pointer}
+tr.clickable:hover{background:var(--pri-soft)!important;box-shadow:inset 3px 0 0 var(--pri)}
+.stat{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.stat:hover{border-color:var(--pri)}
+.stat.active{border-color:var(--pri);box-shadow:var(--sh2)}
+.stat:active{transform:scale(.97)}
+section.card{scroll-margin-top:90px}
+.modal-back{position:fixed;inset:0;background:rgba(10,12,30,.6);display:none;align-items:center;justify-content:center;padding:1rem;z-index:50;backdrop-filter:blur(6px)}
+.modal-back.open{display:flex}
+.modal{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:20px;max-width:860px;width:100%;max-height:90vh;overflow:auto;padding:1.5rem;box-shadow:0 24px 70px rgba(10,12,30,.45);animation:zoomIn .28s ease}
+.modal h3{margin:0;font-size:1.2rem;font-weight:800;letter-spacing:-.01em}
+.modal>div:first-child{position:sticky;top:0;z-index:2;background:var(--card);padding:.3rem 0 .8rem;border-bottom:1px solid var(--line);margin-bottom:1rem}
+.modal h4{margin:1.2rem 0 .5rem;font-size:.95rem;font-weight:750;display:flex;align-items:center;gap:.5rem}
+.modal h4::before{content:"";width:4px;height:1.1em;border-radius:4px;background:var(--pri)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.65rem;margin:.9rem 0}
+.detail-grid div{background:var(--form);border:1px solid var(--line);border-radius:12px;padding:.65rem .8rem;transition:border-color .2s,transform .2s}
+.detail-grid div:hover{border-color:var(--pri);transform:translateY(-2px)}
+.detail-grid small{color:var(--muted);display:block;font-size:.7rem;font-weight:650;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.15rem}
+.detail-grid b{font-size:.95rem}
+.mini-table{width:100%;font-size:.85rem;margin-top:.4rem}
+#modes{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;margin:0 0 1.4rem}
+#modes button{padding:.95rem .8rem;font-size:1rem;font-weight:750;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:.25rem;background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:var(--sh1)}
+#modes button .ico{font-size:1.7rem;line-height:1}
+#modes button small{font-weight:500;color:var(--muted);font-size:.74rem}
+#modes button.active{background:linear-gradient(180deg,var(--pri),var(--pri-d));color:#fff;border-color:var(--pri-d);box-shadow:0 8px 20px rgba(79,70,229,.4)}
+#modes button.active small{color:#e0e7ff}
+@media(max-width:700px){#modes{grid-template-columns:1fr;gap:.6rem}}
+#retEditBack{z-index:70}
+.ret-modal{max-width:540px}
+.ret-form{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem}
+.ret-form .full{grid-column:1/-1}
+.ret-form label{font-size:.75rem;font-weight:650;color:var(--muted);display:flex;flex-direction:column;gap:.25rem}
+@media(max-width:700px){.ret-form{grid-template-columns:1fr}}
+.print-only{display:none}
+.interv-modal{max-width:520px}
+.interv-sub{color:var(--muted);font-size:.88rem;margin:.6rem 0 1rem}
+@media print{
+@page{size:A4;margin:13mm}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact;animation:none!important;transition:none!important}
+html,body{background:#ffffff!important}
+body{background-image:none!important}
+header,main,#modes,#intervBack,#retEditBack,.no-print{display:none!important}
+.modal-back{position:static!important;display:block!important;background:none!important;padding:0!important;backdrop-filter:none!important}
+.modal{width:100%!important;max-width:100%!important;max-height:none!important;overflow:visible!important;background:#ffffff!important;color:#000000!important;border:1px solid #000!important;border-radius:0!important;box-shadow:none!important;padding:0!important;animation:none!important}
+.modal>div:first-child{position:static!important;background:#ffffff!important;border-bottom:2px solid #000!important}
+.modal,.modal *{color:#000000!important;text-shadow:none!important;box-shadow:none!important}
+.modal button,.modal form.add,.modal input,.modal select{display:none!important}
+.print-only{display:block!important;border-bottom:2px solid #000!important;padding-bottom:8px!important;margin-bottom:10px!important}
+.print-only h2{margin:0 0 4px!important;font-size:18px!important}
+.print-only h2::before{display:none!important}
+.badge{background:none!important;border:1px solid #000!important;animation:none!important}
+.detail-grid div{background:none!important;border:1px solid #000!important}
+.detail-grid small{color:#000000!important}
+table{font-size:11px!important}
+h4{margin:12px 0 4px!important}
+a{color:#000000!important;text-decoration:none!important}
+.files,.detail-grid{break-inside:avoid}
+tr,td,th{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="brand"><div class="logo">GROUPE MTM <span class="logo-by">BY TELMO</span></div><div><h1>Suivi Parc Copieurs</h1>
+<p>État machines • Pièces retirées • Stock disponible — cliquez un copieur pour sa fiche</p>
+</div></div>
+<div class="head-right"><span id="helloUser">Bonjour</span><button id="themeBtn" class="ghost" style="color:#fff;border-color:#334155">🪛 Thème sombre</button></div>
+</header>
+<main>
+<nav id="modes" aria-label="Modes">
+<button type="button" data-mode="suivi" class="active"><span class="ico">📊</span>Suivi Parc<small>Stats + copieurs</small></button>
+<button type="button" data-mode="stock"><span class="ico">📦</span>Stock &amp; Pièces<small>Stock disponible</small></button>
+</nav>
+<div class="stats" id="stats"></div>
+<section class="card" id="secParc">
+<h2>1. Parc copieurs</h2>
+<div class="toolbar">
+<input id="fCop" placeholder="Rechercher modèle, série, emplacement...">
+<select id="fCopEtat"><option value="">Tous états machine</option><option>En service</option><option>En panne</option><option>HS</option><option>Donneur pièces</option></select>
+<select id="fCopQual"><option value="">Toutes qualités</option><option>Excellent</option><option>Correct</option><option>Dégradé</option><option>HS</option></select>
+<button id="expCop" class="ghost">Export CSV</button>
+</div>
+<table><thead><tr>
+<th data-k="modele">Modèle</th><th data-k="serie">N° série</th><th data-k="lieu">Emplacement</th>
+<th data-k="compteur">Compteur</th><th data-k="qualite">Qualité impression</th><th data-k="etat">État</th><th>Actions</th>
+</tr></thead><tbody id="tCop"></tbody></table>
+<form class="add" id="aCop">
+<input name="modele" list="dlModele" placeholder="Modèle *" required autocomplete="off"><input name="serie" list="dlSerieCop" placeholder="N° série (optionnel)" autocomplete="off">
+<input name="lieu" list="dlLieu" placeholder="Emplacement" autocomplete="off"><input name="compteur" type="number" placeholder="Compteur">
+<select name="qualite"><option>Excellent</option><option>Correct</option><option>Dégradé</option><option>HS</option></select>
+<select name="etat"><option>En service</option><option>En panne</option><option>HS</option><option>Donneur pièces</option></select>
+<button>Ajouter / Enregistrer</button><button type="button" class="ghost" onclick="this.form.reset();cancelEdit()">Annuler</button>
+</form>
+</section>
+
+<section class="card" id="secRet">
+<h2>2. Pièces retirées</h2>
+<div class="toolbar">
+<input id="fRet" placeholder="Rechercher pièce, série, donneur...">
+<button id="expRet" class="ghost">Export CSV</button>
+</div>
+<table><thead><tr>
+<th>Pièce</th><th>Réf / N° série pièce</th><th>Copieur donneur</th><th>Provenance</th><th>Date retrait</th><th>Qualité impression au retrait</th><th>Motif</th><th>Retirée par</th><th>Actions</th>
+</tr></thead><tbody id="tRet"></tbody></table>
+<form class="add" id="aRet">
+<input name="piece" list="dlPiece" placeholder="Pièce * (ex: Tambour)" required autocomplete="off"><input name="serie" list="dlSeriePiece" placeholder="N° série pièce (optionnel)" autocomplete="off">
+<input name="donneur" list="dlCop" placeholder="Copieur donneur (modèle + série)" autocomplete="off"><datalist id="dlCop"></datalist><input name="prov" list="dlProv" placeholder="Provenance" autocomplete="off">
+<input name="date" type="date"><select name="qualite"><option>Excellent</option><option>Correct</option><option>Dégradé</option><option>HS</option></select>
+<input name="motif" list="dlMotif" placeholder="Motif retrait" autocomplete="off"><button>Ajouter / Enregistrer</button><button type="button" class="ghost" onclick="this.form.reset();cancelEdit()">Annuler</button>
+</form>
+</section>
+
+<section class="card" id="secStock">
+<h2>3. Stock pièces disponibles</h2>
+<div class="toolbar">
+<input id="fSto" placeholder="Rechercher pièce, compatibilité...">
+<select id="fStoEtat"><option value="">Tous états</option><option>Neuf</option><option>Occasion</option><option>Usé</option><option>Rebut</option></select>
+<button id="expSto" class="ghost">Export CSV</button>
+</div>
+<table><thead><tr>
+<th>Pièce</th><th>Réf / Série</th><th>Provenance</th><th>Compatibilité</th><th>État</th><th>Qté</th><th>Stockage</th><th>Actions</th>
+</tr></thead><tbody id="tSto"></tbody></table>
+<form class="add" id="aSto">
+<input name="piece" list="dlPiece" placeholder="Pièce *" required autocomplete="off"><input name="serie" list="dlSeriePiece" placeholder="Réf / Série (optionnel)" autocomplete="off">
+<input name="prov" list="dlProv" placeholder="Provenance (donneur)" autocomplete="off"><input name="compat" list="dlCompat" placeholder="Compatibilité modèles" autocomplete="off">
+<select name="etat"><option>Neuf</option><option>Occasion</option><option>Usé</option><option>Rebut</option></select>
+<input name="qte" type="number" value="1" min="1"><input name="lieu" list="dlStockage" placeholder="Emplacement stockage" autocomplete="off"><button>Ajouter / Enregistrer</button><button type="button" class="ghost" onclick="this.form.reset();cancelEdit()">Annuler</button>
+</form>
+</section>
+</main>
+<datalist id="dlModele"></datalist><datalist id="dlSerieCop"></datalist><datalist id="dlLieu"></datalist><datalist id="dlPiece"></datalist><datalist id="dlSeriePiece"></datalist><datalist id="dlProv"></datalist><datalist id="dlMotif"></datalist><datalist id="dlCompat"></datalist><datalist id="dlStockage"></datalist>
+<div class="modal-back" id="detailBack" onclick="if(event.target===this)closeDetail()">
+<div class="modal"><div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem"><h3 id="dTitle">Fiche copieur</h3><div style="display:flex;gap:.5rem"><button class="ghost no-print" onclick="window.print()" title="Imprimer la fiche">🖨️ Imprimer la fiche</button><button class="ghost" onclick="closeDetail()">Fermer ✕</button></div></div><div id="dBody"></div></div>
+</div>
+<div class="modal-back" id="intervBack" onclick="if(event.target===this)closeInterv()">
+<div class="modal interv-modal"><div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem"><h3 id="intervTitle">Intervention</h3><button class="ghost" onclick="closeInterv()">Fermer ✕</button></div>
+<div id="intervBody">
+<p class="interv-sub">Valide pour enregistrer une intervention locale avec le technicien et la date du jour.</p>
+<div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap"><button id="intervValid">Valider l'intervention</button><button class="ghost" onclick="closeInterv()">Annuler</button></div>
+</div></div>
+</div>
+<div class="modal-back" id="retEditBack" onclick="if(event.target===this)closeRetEdit()">
+<div class="modal ret-modal"><div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem"><h3>Modifier la pièce</h3><button type="button" class="ghost" onclick="closeRetEdit()">Fermer ✕</button></div>
+<div class="ret-form">
+<label>Pièce *<input id="retE_piece" required autocomplete="off"></label>
+<label>Réf / N° série<input id="retE_serie" autocomplete="off"></label>
+<label class="full">Copieur donneur<input id="retE_donneur" list="dlCop" autocomplete="off"></label>
+<label>Provenance<input id="retE_prov" list="dlProv" autocomplete="off"></label>
+<label>Date retrait<input id="retE_date" type="date"></label>
+<label>Qualité<select id="retE_qualite"><option>Excellent</option><option>Correct</option><option>Dégradé</option><option>HS</option></select></label>
+<label>Motif<input id="retE_motif" list="dlMotif" autocomplete="off"></label>
+<div class="full" id="retE_tech" style="font-size:.85rem;color:var(--muted)"></div>
+<div class="full" style="display:flex;gap:.5rem;flex-wrap:wrap"><button type="button" onclick="saveRetEdit()">Enregistrer</button><button type="button" class="ghost" onclick="closeRetEdit()">Annuler</button></div>
+</div></div>
+</div>
+<script>
+// --- Application 100% locale : données dans le navigateur, aucun serveur ---
+const K={cop:'parc_copieurs_v1',ret:'parc_pieces_retirees_v1',sto:'parc_stock_v1'};
+const seedCop=[
+{modele:'Canon iR-ADV C5535',serie:'CND21045',lieu:'Bureau compta',compteur:182400,qualite:'Correct',etat:'En service'},
+{modele:'Kyocera TASKalfa 4054ci',serie:'KYR88312',lieu:'Atelier',compteur:95400,qualite:'Excellent',etat:'En service'},
+{modele:'Canon iR-ADV C5535',serie:'CND19877',lieu:'Réserve',compteur:310200,qualite:'Dégradé',etat:'Donneur pièces'},
+{modele:'HP LaserJet MFP E72525',serie:'HP77120',lieu:'Accueil',compteur:220500,qualite:'HS',etat:'En panne'}
+];
+const seedRet=[
+{piece:'Tambour noir',serie:'TB-C55-0921',donneur:'Canon C5535 / CND19877',prov:'Démonté réserve',date:'2026-09-12',qualite:'Dégradé',motif:'Traces noires'},
+{piece:'Four / Unité fusion',serie:'FU-KY4054-011',donneur:'Kyocera 4054ci / KYR88312',prov:'Préventif atelier',date:'2026-08-30',qualite:'Correct',motif:'Préventif 100k'},
+{piece:'Courroie transfert',serie:'CT-C55-044',donneur:'Canon C5535 / CND19877',prov:'Démonté réserve',date:'2026-09-12',qualite:'Correct',motif:'Donneur pièces'}
+];
+const seedSto=[
+{piece:'Toner noir compatible',serie:'TN-C55-BK-220',prov:'Achat fournisseur',compat:'Canon C5535 / C5540',etat:'Neuf',qte:4,lieu:'Armoire A2'},
+{piece:'Tambour noir',serie:'TB-C55-0921',prov:'Canon C5535 CND19877',compat:'Canon C5535',etat:'Occasion',qte:1,lieu:'Étagère pièces'},
+{piece:'Four',serie:'FU-KY4054-011',prov:'Kyocera KYR88312',compat:'TASKalfa 4054ci',etat:'Occasion',qte:1,lieu:'Étagère pièces'},
+{piece:'Rouleau pick-up',serie:'RP-UNIV-08',prov:'Divers',compat:'Universel',etat:'Usé',qte:6,lieu:'Bac tri'}
+];
+const load=(k,s)=>{try{const v=JSON.parse(localStorage.getItem(k));return Array.isArray(v)?v:s}catch{return s}};
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let cop=load(K.cop,seedCop),ret=load(K.ret,seedRet),sto=load(K.sto,seedSto);
+let editCop=-1,editRet=-1,editSto=-1;
+const $=id=>document.getElementById(id);
+function badge(t){return `<span class="badge ${t}">${t}</span>`}
+function esc(s){return String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')}
+let statFilter='';
+function matchStat(c){
+if(!statFilter||statFilter==='all')return true;
+if(statFilter==='service')return c.etat==='En service';
+if(statFilter==='panne')return c.etat==='En panne'||c.etat==='HS';
+const key=(c.serie||'').toLowerCase(),mod=(c.modele||'').toLowerCase();
+if(statFilter==='retirees')return ret.some(r=>{const t=((r.donneur||'')+' '+(r.prov||'')).toLowerCase();return (key&&t.includes(key))||(mod&&t.includes(mod));});
+if(statFilter==='stock')return sto.some(s=>{const t=((s.prov||'')+' '+(s.compat||'')).toLowerCase();return (key&&t.includes(key))||(mod&&t.includes(mod));});
+return true;
+}
+window.setStatFilter=(f)=>{
+statFilter=(statFilter===f&&f!=='all')?'':(f||'');
+if(f==='all'||!statFilter){$('fCop').value='';$('fCopEtat').value='';if($('fCopQual'))$('fCopQual').value='';}
+if(f==='service'){$('fCopEtat').value='En service';if($('fCopQual'))$('fCopQual').value='';}
+if(f==='panne'||f==='retirees'||f==='stock'){$('fCopEtat').value='';if($('fCopQual'))$('fCopQual').value='';}
+render();
+const sec=$('tCop').closest('section');if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+};
+function renderRet(){
+const fr=$('fRet').value.toLowerCase();
+$('tRet').innerHTML=ret.filter(r=>JSON.stringify(r).toLowerCase().includes(fr)).map(r=>{const ri=ret.indexOf(r);return `<tr><td>${esc(r.piece)}</td><td><b>${esc(r.serie)}</b></td><td>${esc(r.donneur)}</td><td>${esc(r.prov)}</td><td>${esc(r.date)}</td><td>${badge(r.qualite)}</td><td>${esc(r.motif)}</td><td>Retirée par : <b>${esc(r.tech||'—')}</b></td><td style="white-space:nowrap"><button type="button" class="ghost" onclick="editRetItem(event,${ri})">Modifier</button> <button type="button" class="ghost" onclick="del('ret',${ri})">✕</button></td></tr>`}).join('');
+}
+function render(){
+const fc=$('fCop').value.toLowerCase(),fe=$('fCopEtat').value,fq=$('fCopQual')?$('fCopQual').value:'';
+$('tCop').innerHTML=cop.filter(c=>(!fe||c.etat===fe||c.qualite===fe)&&(!fq||c.qualite===fq)&&matchStat(c)&&JSON.stringify(c).toLowerCase().includes(fc)).map(c=>{const ri=cop.indexOf(c);return `<tr class="clickable" onclick="showDetail(${ri})" title="Cliquer pour voir la fiche"><td>${esc(c.modele)}</td><td><b>${esc(c.serie||'-')}</b></td><td>${esc(c.lieu)}</td><td>${c.compteur||0}</td><td>${badge(c.qualite)}</td><td>${esc(c.etat)}</td><td style="white-space:nowrap" onclick="event.stopPropagation()"><button onclick="openInterv(${ri})" title="Intervenir sur ce copieur">Intervenir</button> <button class="ghost" onclick="showDetail(${ri})">Détails</button> <button class="ghost" onclick="editItem('cop',${ri})">Modifier</button> <button class="ghost" onclick="del('cop',${ri})">✕</button></td></tr>`}).join('');
+renderRet();
+const fs=$('fSto').value.toLowerCase(),fse=$('fStoEtat').value;
+$('tSto').innerHTML=sto.filter(s=>(!fse||s.etat===fse)&&JSON.stringify(s).toLowerCase().includes(fs)).map(s=>{const ri=sto.indexOf(s);return `<tr><td>${esc(s.piece)}</td><td><b>${esc(s.serie)}</b></td><td>${esc(s.prov)}</td><td>${esc(s.compat)}</td><td>${badge(s.etat)}</td><td>${s.qte}</td><td>${esc(s.lieu)}</td><td style="white-space:nowrap"><button class="ghost" onclick="editItem('sto',${ri})">Modifier</button> <button class="ghost" onclick="del('sto',${ri})">✕</button></td></tr>`}).join('');
+$('stats').innerHTML=`<div class="stat${!statFilter||statFilter==='all'?' active':''}" role="button" tabindex="0" data-f="all" onclick="setStatFilter('all')" title="Tout afficher"><b>${cop.length}</b><span>Copieurs suivis</span></div><div class="stat${statFilter==='service'?' active':''}" role="button" tabindex="0" data-f="service" onclick="setStatFilter('service')" title="Seulement en service"><b>${cop.filter(c=>c.etat==='En service').length}</b><span>En service</span></div><div class="stat${statFilter==='panne'?' active':''}" role="button" tabindex="0" data-f="panne" onclick="setStatFilter('panne')" title="En panne ou HS"><b>${cop.filter(c=>c.etat==='En panne'||c.etat==='HS').length}</b><span>En panne / HS</span></div><div class="stat${statFilter==='retirees'?' active':''}" role="button" tabindex="0" data-f="retirees" onclick="setStatFilter('retirees')" title="Machines avec pièces retirées"><b>${ret.length}</b><span>Pièces retirées</span></div><div class="stat${statFilter==='stock'?' active':''}" role="button" tabindex="0" data-f="stock" onclick="setStatFilter('stock')" title="Machines liées au stock"><b>${sto.reduce((a,s)=>a+(+s.qte||0),0)}</b><span>Pièces en stock</span></div>`;
+save(K.cop,cop);save(K.ret,ret);save(K.sto,sto);
+}
+function fill(formId,obj){const f=$(formId);Object.entries(obj).forEach(([k,v])=>{if(f.elements[k])f.elements[k].value=v??''});}
+function setBtn(formId,editing){const b=formId.querySelector('button');b.textContent=editing?'Enregistrer':'Ajouter';}
+window.del=(t,i)=>{if(!confirm('Supprimer ?'))return;if(t==='cop')cop.splice(i,1);if(t==='ret')ret.splice(i,1);if(t==='sto')sto.splice(i,1);cancelEdit();render();if(currentDetail>=0){if(!cop[currentDetail])closeDetail();else showDetail(currentDetail);}};
+window.editItem=(t,i)=>{
+if(t==='cop'){editCop=i;fill('aCop',cop[i]);setBtn($('aCop'),true);$('aCop').scrollIntoView({behavior:'smooth',block:'center'});}
+if(t==='ret'){editRetItem(null,i);return;}
+if(t==='sto'){editSto=i;fill('aSto',sto[i]);setBtn($('aSto'),true);$('aSto').scrollIntoView({behavior:'smooth',block:'center'});}
+};
+// --- Édition d'une pièce retirée en pop-up : pas de navigation, pas de rechargement ---
+let retEditIdx=-1;
+window.editRetItem=(e,idx)=>{
+if(e){e.preventDefault();e.stopPropagation();}
+const r=ret[idx];if(!r)return;retEditIdx=idx;
+$('retE_piece').value=r.piece||'';$('retE_serie').value=r.serie||'';
+$('retE_donneur').value=r.donneur||'';$('retE_prov').value=r.prov||'';
+$('retE_date').value=r.date||'';$('retE_qualite').value=r.qualite||'Correct';
+$('retE_motif').value=r.motif||'';
+$('retE_tech').textContent='Retirée par : '+(r.tech||'—');
+$('retEditBack').classList.add('open');
+};
+window.closeRetEdit=()=>{retEditIdx=-1;$('retEditBack').classList.remove('open');};
+window.saveRetEdit=async()=>{
+const r=ret[retEditIdx];if(!r){closeRetEdit();return;}
+const piece=$('retE_piece').value.trim();
+if(!piece){alert('Indique le nom de la pièce.');return;}
+r.piece=piece;r.serie=$('retE_serie').value.trim();r.donneur=$('retE_donneur').value.trim();
+r.prov=$('retE_prov').value.trim();r.date=$('retE_date').value;r.qualite=$('retE_qualite').value;
+r.motif=$('retE_motif').value.trim();
+save(K.ret,ret);
+renderRet();
+if(currentDetail>=0&&$('detailBack').classList.contains('open'))showDetail(currentDetail);
+closeRetEdit();
+};
+document.addEventListener('keydown',e=>{
+if(e.key==='Escape'&&$('retEditBack')&&$('retEditBack').classList.contains('open')){e.stopPropagation();closeRetEdit();}
+},true);
+// Garde globale : aucun bouton hors formulaire ne doit soumettre ni recharger.
+document.addEventListener('click',e=>{
+const b=e.target&&e.target.closest?e.target.closest('button'):null;
+if(!b)return;
+if((b.getAttribute('type')||'').toLowerCase()==='submit')return;
+if(b.closest('form')||b.closest('a'))return;
+e.preventDefault();
+},true);
+window.cancelEdit=()=>{editCop=editRet=editSto=-1;['aCop','aRet','aSto'].forEach(id=>{setBtn($(id),false);});};
+let currentDetail=-1;
+window.showDetail=(i)=>{
+const c=cop[i];if(!c)return;currentDetail=i;
+const key=(c.serie||'').toLowerCase(),modKey=(c.modele||'').toLowerCase();
+const pieces=ret.map((r,idx)=>({r,idx})).filter(o=>{const txt=((o.r.donneur||'')+' '+(o.r.prov||'')).toLowerCase();return (key&&txt.includes(key))||(modKey&&txt.includes(modKey));});
+const stocks=sto.map((s,idx)=>({s,idx})).filter(o=>{const txt=((o.s.prov||'')+' '+(o.s.compat||'')).toLowerCase();return (key&&txt.includes(key))||(modKey&&txt.includes(modKey));});
+$('dTitle').textContent=`${c.modele} — ${c.serie||'sans série'}`;
+$('dBody').innerHTML=`
+<div class="print-only"><h2>Rapport d'intervention — ${esc(c.modele)} ${esc(c.serie||'sans série')}</h2><div>Technicien : <b>${esc(c.technicien||pseudo()||'-')}</b> • Édité le ${new Date().toLocaleString('fr-FR')}</div></div>
+<div class="detail-grid">
+<div><small>Modèle</small><b>${esc(c.modele)}</b></div>
+<div><small>N° série</small><b>${esc(c.serie||'-')}</b></div>
+<div><small>Emplacement</small><b>${esc(c.lieu||'-')}</b></div>
+<div><small>Compteur</small><b>${c.compteur||0}</b></div>
+<div><small>Qualité impression</small>${badge(c.qualite)}</div>
+<div><small>État</small><b>${esc(c.etat)}</b></div>
+<div><small>Technicien</small><b>${esc(c.technicien||pseudo()||'-')}</b></div>
+</div>
+<h4>Interventions (${(c.interv||[]).length})</h4>
+${(c.interv&&c.interv.length)?`<table class="mini-table"><thead><tr><th>Date</th><th>Technicien</th></tr></thead><tbody>${c.interv.map(v=>`<tr><td>${esc(v.date||'')}</td><td>${esc(v.tech||'')}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--muted)">Aucune intervention enregistrée.</p>'}
+<h4>Pièces retirées de ce copieur (${pieces.length}) — modifiables</h4>
+${pieces.length?`<table class="mini-table"><thead><tr><th>Pièce</th><th>Série pièce</th><th>Date</th><th>Qualité</th><th>Motif</th><th>Retirée par</th><th>Actions</th></tr></thead><tbody>${pieces.map(o=>`<tr><td>${esc(o.r.piece)}</td><td>${esc(o.r.serie||'-')}</td><td>${esc(o.r.date)}</td><td>${badge(o.r.qualite)}</td><td>${esc(o.r.motif)}</td><td>Retirée par : <b>${esc(o.r.tech||'—')}</b></td><td style="white-space:nowrap"><button type="button" class="ghost" onclick="editRetItem(event,${o.idx})">Modifier</button> <button type="button" class="ghost" onclick="delRetFromDetail(${o.idx})">✕</button></td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--muted)">Aucune pièce retirée enregistrée.</p>'}
+<form class="add" onsubmit="return addRetFromDetail(event,${i})" style="margin-bottom:1rem">
+<input id="nomPiece" name="piece" list="dlPiece" placeholder="Nouvelle pièce retirée *" required autocomplete="off"><input id="seriePiece" name="serie" list="dlSeriePiece" placeholder="N° série pièce (optionnel)" autocomplete="off">
+<input name="date" type="date"><select name="qualite"><option>Excellent</option><option>Correct</option><option>Dégradé</option><option>HS</option></select>
+<input name="motif" list="dlMotif" placeholder="Motif / état pièce" autocomplete="off">
+<button>Ajouter à ce copieur</button>
+</form>
+<h4>Pièces en stock liées (${stocks.length}) — état modifiable</h4>
+${stocks.length?`<table class="mini-table"><thead><tr><th>Pièce</th><th>Série</th><th>État</th><th>Qté</th><th>Stockage</th><th>Actions</th></tr></thead><tbody>${stocks.map(o=>`<tr><td>${esc(o.s.piece)}</td><td>${esc(o.s.serie)}</td><td><select onchange="setStockEtat(${o.idx},this.value)">${['Neuf','Occasion','Usé','Rebut'].map(e=>`<option ${o.s.etat===e?'selected':''}>${e}</option>`).join('')}</select></td><td>${o.s.qte}</td><td>${esc(o.s.lieu)}</td><td style="white-space:nowrap"><button class="ghost" onclick="closeDetail();editItem('sto',${o.idx})">Modifier</button></td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--muted)">Aucune pièce en stock liée.</p>'}
+<div class="no-print" style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap"><button onclick="editItem('cop',${i});closeDetail()">Modifier ce copieur</button><button class="ghost" onclick="closeDetail()">Fermer</button></div>`;
+$('detailBack').classList.add('open');
+};
+window.addRetFromDetail=(e,ci)=>{
+e.preventDefault();const c=cop[ci];const f=e.target;
+const tag=c.serie?`${c.modele} / ${c.serie}`:`${c.modele}`;
+const v={_id:nid('L'),piece:f.piece.value,serie:f.serie.value,donneur:tag,prov:`Retiré de ${c.serie||c.modele}`,date:f.date.value,qualite:f.qualite.value,motif:f.motif.value,tech:sessionTech()};
+ret.push(v);render();showDetail(ci);return false;
+};
+window.delRetFromDetail=(idx)=>{if(!confirm('Supprimer cette pièce ?'))return;ret.splice(idx,1);render();if(currentDetail>=0)showDetail(currentDetail);};
+window.setStockEtat=(idx,val)=>{sto[idx].etat=val;render();if(currentDetail>=0)showDetail(currentDetail);};
+window.closeDetail=()=>$('detailBack').classList.remove('open');
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+function nid(p){return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function ensureIds(){let ch=false;[...cop,...ret,...sto].forEach(o=>{if(!o._id){o._id=nid('L');ch=true}});if(ch)render();}
+ensureIds();
+function pseudo(){return localStorage.getItem('parc_pseudo')||'';}
+function sessionTech(){return pseudo()||'?';}
+function paintHello(){
+const el=$('helloUser');if(!el)return;
+const n=pseudo()||'';
+el.textContent=n?('Bonjour '+n):'Bonjour';
+}
+paintHello();
+if(!pseudo()){const p=prompt('Ton prénom pour le suivi ?');if(p){localStorage.setItem('parc_pseudo',p);paintHello();}}
+try{localStorage.removeItem('parc_pb_url');localStorage.removeItem('parc_firebase_cfg');localStorage.removeItem('parc_email');}catch(e){}
+// --- Fenêtre d'intervention par machine (100% locale) ---
+let intervIdx=-1;
+window.openInterv=(i)=>{
+const c=cop[i];if(!c)return;intervIdx=i;
+$('intervTitle').textContent=`Intervention sur ${c.modele||'?'} - ${c.serie||'sans série'}`;
+$('intervBack').classList.add('open');
+};
+window.closeInterv=()=>$('intervBack').classList.remove('open');
+$('intervValid').onclick=()=>{
+const c=cop[intervIdx];if(!c){alert('Aucun copieur sélectionné.');return;}
+const tech=sessionTech();
+if(!Array.isArray(c.interv))c.interv=[];
+c.interv.push({date:new Date().toLocaleString('fr-FR'),tech});
+save(K.cop,cop);render();closeInterv();
+if(currentDetail>=0&&$('detailBack').classList.contains('open'))showDetail(currentDetail);
+alert('Intervention enregistrée pour '+tech+'.');
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeInterv();});
+function form(id,fn){$(id).addEventListener('submit',e=>{e.preventDefault();const o={};new FormData(e.target).forEach((v,k)=>o[k]=v);fn(o);e.target.reset();cancelEdit();render()})}
+form('aCop',o=>{const prev=editCop>=0?cop[editCop]:null;const tech=sessionTech();if(prev){cop[editCop]={_id:prev._id,modele:o.modele,serie:o.serie,lieu:o.lieu,compteur:+o.compteur||0,qualite:o.qualite,etat:o.etat,technicien:tech,files:prev.files||[]};}else{const v={_id:nid('L'),modele:o.modele,serie:o.serie,lieu:o.lieu,compteur:+o.compteur||0,qualite:o.qualite,etat:o.etat,technicien:tech,files:[]};cop.push(v);}});
+form('aRet',o=>{const prev=editRet>=0?ret[editRet]:null;const v={_id:prev?prev._id:nid('L'),piece:o.piece,serie:o.serie,donneur:o.donneur,prov:o.prov,date:o.date,qualite:o.qualite,motif:o.motif,tech:(prev&&prev.tech)||sessionTech()};if(editRet>=0)ret[editRet]=v;else ret.push(v);});
+form('aSto',o=>{const v={_id:editSto>=0?sto[editSto]._id:nid('L'),piece:o.piece,serie:o.serie,prov:o.prov,compat:o.compat,etat:o.etat,qte:+o.qte||1,lieu:o.lieu};if(editSto>=0)sto[editSto]=v;else sto.push(v);});
+['fCop','fCopEtat','fCopQual'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',()=>{statFilter='';render()})});
+['fRet','fSto','fStoEtat'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',render)});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('stat')){e.preventDefault();setStatFilter(e.target.dataset.f);}});
+// mémoire + suggestions : tout ce qui est saisi est gardé en localStorage via cop/ret/sto et proposé au clic
+function uniq(a){return [...new Set(a.map(v=>String(v??'').trim()).filter(Boolean))].sort((x,y)=>x.localeCompare(y,'fr',{numeric:true}));}
+function setDl(id,vals){const el=$(id);if(el)el.innerHTML=vals.map(v=>`<option value="${esc(v)}">`).join('');}
+function refreshDatalist(){
+setDl('dlCop',uniq(cop.map(c=>`${c.modele} / ${c.serie}`)));
+setDl('dlModele',uniq(cop.map(c=>c.modele).concat(sto.map(s=>s.compat))));
+setDl('dlSerieCop',uniq(cop.map(c=>c.serie)));
+setDl('dlLieu',uniq(cop.map(c=>c.lieu)));
+setDl('dlPiece',uniq(ret.map(r=>r.piece).concat(sto.map(s=>s.piece))));
+setDl('dlSeriePiece',uniq(ret.map(r=>r.serie).concat(sto.map(s=>s.serie))));
+setDl('dlProv',uniq(ret.map(r=>r.prov).concat(ret.map(r=>r.donneur)).concat(sto.map(s=>s.prov))));
+setDl('dlMotif',uniq(ret.map(r=>r.motif)));
+setDl('dlCompat',uniq(sto.map(s=>s.compat).concat(cop.map(c=>c.modele))));
+setDl('dlStockage',uniq(sto.map(s=>s.lieu).concat(cop.map(c=>c.lieu))));
+}
+const _render=render;
+render=function(){_render();refreshDatalist();};
+// thème sombre persistant
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('parc_theme',t);$('themeBtn').textContent=t==='dark'?'☀️ Thème clair':'🪛 Thème sombre';}
+setTheme(localStorage.getItem('parc_theme')||'light');
+$('themeBtn').onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+document.querySelectorAll('th[data-k]').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;cop.sort((a,b)=>String(a[k]).localeCompare(String(b[k]),'fr',{numeric:true}));render()}));
+function csv(rows,cols,name){const l=[cols.join(';'),...rows.map(r=>cols.map(c=>`"${String(r[c]??'').replaceAll('"','""')}"`).join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(["\ufeff"+l],{type:'text/csv'}));a.download=name;a.click()}
+$('expCop').onclick=()=>csv(cop,['modele','serie','lieu','compteur','qualite','etat'],'copieurs.csv');
+$('expRet').onclick=()=>csv(ret,['piece','serie','donneur','prov','date','qualite','motif','tech'],'pieces-retirees.csv');
+// --- Navigation par modes (affichage seul) ---
+const MODES={suivi:['stats','secParc'],stock:['secRet','secStock']};
+let appMode=localStorage.getItem('parc_mode')||'suivi';
+if(!MODES[appMode])appMode='suivi';
+window.setMode=(m)=>{
+if(!MODES[m])return;appMode=m;localStorage.setItem('parc_mode',m);
+document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+Object.keys(MODES).forEach(k=>MODES[k].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=(k===m)?'':'none';}));
+};
+document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+setMode(appMode);
+$('expSto').onclick=()=>csv(sto,['piece','serie','prov','compat','etat','qte','lieu'],'stock-pieces.csv');
+render();
+</script>
+</body>
+</html>
