@@ -161,6 +161,19 @@ section.card{scroll-margin-top:90px}
 .ret-form .full{grid-column:1/-1}
 .ret-form label{font-size:.75rem;font-weight:650;color:var(--muted);display:flex;flex-direction:column;gap:.25rem}
 @media(max-width:700px){.ret-form{grid-template-columns:1fr}}
+#logoutBtn{font-size:.72rem;font-weight:600;opacity:.75;padding:.3rem .6rem;min-height:0}
+#logoutBtn:hover{opacity:1}
+#loginGate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;background:#000;transition:opacity .45s ease,visibility .45s}
+#loginGate.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.gate-card{width:min(380px,94vw);background:var(--card);color:var(--ink);border-radius:20px;padding:2rem 1.8rem;box-shadow:0 30px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:.7rem;animation:zoomIn .35s ease}
+.gate-logo{font-size:2.6rem;text-align:center;line-height:1}
+.gate-card h2{margin:0;text-align:center;font-size:1.3rem;font-weight:800;letter-spacing:-.01em}
+.gate-card h2::before{display:none}
+.gate-card p{margin:0 0 .4rem;text-align:center;color:var(--muted);font-size:.88rem}
+.gate-card input{width:100%;min-height:46px;font-size:1rem}
+.gate-card button{min-height:46px;font-size:1rem}
+.gate-error{text-align:center;font-size:.85rem;color:var(--bad);min-height:1.2em;font-weight:600}
+body.locked header,body.locked main,body.locked .modal-back{display:none!important}
 .print-only{display:none}
 .interv-modal{max-width:520px}
 .interv-sub{color:var(--muted);font-size:.88rem;margin:.6rem 0 1rem}
@@ -169,7 +182,7 @@ section.card{scroll-margin-top:90px}
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact;animation:none!important;transition:none!important}
 html,body{background:#ffffff!important}
 body{background-image:none!important}
-header,main,#modes,#intervBack,#retEditBack,.no-print{display:none!important}
+header,main,#modes,#loginGate,#intervBack,#retEditBack,.no-print{display:none!important}
 .modal-back{position:static!important;display:block!important;background:none!important;padding:0!important;backdrop-filter:none!important}
 .modal{width:100%!important;max-width:100%!important;max-height:none!important;overflow:visible!important;background:#ffffff!important;color:#000000!important;border:1px solid #000!important;border-radius:0!important;box-shadow:none!important;padding:0!important;animation:none!important}
 .modal>div:first-child{position:static!important;background:#ffffff!important;border-bottom:2px solid #000!important}
@@ -189,12 +202,23 @@ tr,td,th{break-inside:avoid}
 }
 </style>
 </head>
-<body>
+<body class="locked">
+<div id="loginGate">
+<form class="gate-card" id="gateForm" autocomplete="off">
+<div class="gate-logo">🖨️</div>
+<h2>Suivi Parc Copieurs</h2>
+<p>Connecte-toi pour accéder au parc.</p>
+<input id="gateEmail" type="email" placeholder="Email" required autocomplete="username">
+<input id="gatePass" type="password" placeholder="Mot de passe" required autocomplete="current-password">
+<button type="submit">Se connecter</button>
+<div class="gate-error" id="gateError"></div>
+</form>
+</div>
 <header>
 <div class="brand"><div class="logo">GROUPE MTM <span class="logo-by">BY TELMO</span></div><div><h1>Suivi Parc Copieurs</h1>
 <p>État machines • Pièces retirées • Stock disponible — cliquez un copieur pour sa fiche</p>
 </div></div>
-<div class="head-right"><span id="helloUser">Bonjour</span><button id="themeBtn" class="ghost" style="color:#fff;border-color:#334155">🪛 Thème sombre</button></div>
+<div class="head-right"><span id="helloUser">Bonjour</span><button id="logoutBtn" type="button" class="ghost" title="Se déconnecter">Déconnexion</button><button id="themeBtn" class="ghost" style="color:#fff;border-color:#334155">🪛 Thème sombre</button></div>
 </header>
 <main>
 <nav id="modes" aria-label="Modes">
@@ -285,6 +309,15 @@ tr,td,th{break-inside:avoid}
 </div>
 <script>
 // --- Application 100% locale : données dans le navigateur, aucun serveur ---
+// UTILISATEURS AUTORISÉS : c'est ici que tu dois écrire les vrais accès de
+// tes collègues, en remplaçant les exemples ci-dessous (un objet par personne).
+// Les mots de passe sont en clair dans ce fichier : réserve cet outil à un
+// usage interne de confiance, jamais en production exposée.
+const UTILISATEURS_AUTORISES = [
+  { email: "t.desousaoliveira@groupe-mtm.COM", password: "046861", prenom: "Telmo" },
+  { email: "EXEMPLE_2@MAIL.COM", password: "MOT_DE_PASSE_2", prenom: "PRENOM_2" },
+  { email: "EXEMPLE_3@MAIL.COM", password: "MOT_DE_PASSE_3", prenom: "PRENOM_3" }
+];
 const K={cop:'parc_copieurs_v1',ret:'parc_pieces_retirees_v1',sto:'parc_stock_v1'};
 const seedCop=[
 {modele:'Canon iR-ADV C5535',serie:'CND21045',lieu:'Bureau compta',compteur:182400,qualite:'Correct',etat:'En service'},
@@ -440,7 +473,32 @@ const n=pseudo()||'';
 el.textContent=n?('Bonjour '+n):'Bonjour';
 }
 paintHello();
-if(!pseudo()){const p=prompt('Ton prénom pour le suivi ?');if(p){localStorage.setItem('parc_pseudo',p);paintHello();}}
+function lockApp(){document.body.classList.add('locked');const g=$('loginGate');if(!g)return;g.style.display='';requestAnimationFrame(()=>{g.classList.remove('hidden');});}
+function unlockApp(){const g=$('loginGate');if(g){g.classList.add('hidden');clearTimeout(g._t);g._t=setTimeout(()=>{g.style.display='none';},500);}document.body.classList.remove('locked');}
+$('gateForm').addEventListener('submit',(e)=>{
+e.preventDefault();
+const em=$('gateEmail').value.trim().toLowerCase();
+const pw=$('gatePass').value;
+let u=null;
+for(const x of UTILISATEURS_AUTORISES){
+if(String(x.email||'').toLowerCase()===em&&x.password===pw){u=x;break;}
+}
+const err=$('gateError');
+if(!u){if(err)err.textContent='Identifiants incorrects.';return;}
+if(err)err.textContent='';
+try{localStorage.setItem('parc_session',u.email);localStorage.setItem('parc_pseudo',u.prenom);}catch(e){}
+paintHello();unlockApp();
+});
+$('logoutBtn').onclick=()=>{try{localStorage.removeItem('parc_session');}catch(e){}lockApp();};
+(function(){
+let s='';try{s=localStorage.getItem('parc_session')||'';}catch(e){}
+let u=null;
+for(const x of UTILISATEURS_AUTORISES){
+if(String(x.email||'').toLowerCase()===String(s).toLowerCase()){u=x;break;}
+}
+if(u&&s){try{if(!pseudo())localStorage.setItem('parc_pseudo',u.prenom);}catch(e){}paintHello();unlockApp();}
+else lockApp();
+})();
 try{localStorage.removeItem('parc_pb_url');localStorage.removeItem('parc_firebase_cfg');localStorage.removeItem('parc_email');}catch(e){}
 // --- Fenêtre d'intervention par machine (100% locale) ---
 let intervIdx=-1;
